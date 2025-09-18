@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Maç Sayacı</title>
+  <style>
+    body {
+      margin: 0;
+      background: transparent; /* Yayın için şeffaf */
+      font-family: 'Arial Black', sans-serif;
+    }
+    #scoreboard {
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 10px 15px;
+      text-align: left;
+      background: black;
+    }
+    #info {
+      display: none;
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    #counter {
+      font-size: 48px;
+      font-weight: bold;
+      line-height: 1;
+      color: #fff;
+    }
+    #extra {
+      font-size: 24px;
+      color: #fff; /* beyaz */
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="scoreboard">
+    <div id="info"></div>
+    <div id="counter"></div>
+    <div id="extra"></div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+
+    let half = params.get("half"); // 1 ya da 2
+    let startMinute = parseInt(params.get("minute")) || 0;
+    let startSecond = parseInt(params.get("second")) || 0;
+
+    document.getElementById("info").textContent = `${half}. Yarı`;
+
+    const startTime = Date.now();
+    let extraStart = null; // uzatma başladığı an
+
+    function formatTime(totalSec) {
+      let m = Math.floor(totalSec / 60);
+      let s = totalSec % 60;
+      return `${m}:${s < 10 ? "0" + s : s}`;
+    }
+
+    function updateCounter() {
+      const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+      let totalSec = startMinute * 60 + startSecond + elapsedSec;
+      let currentMinute = Math.floor(totalSec / 60);
+
+      // Uzatma sınırı
+      const limit = half === "1" ? 45 : 90;
+
+      if ((half === "1" && currentMinute >= 45) || (half === "2" && currentMinute >= 90)) {
+        // Ana sayaç sabitlenir (45:00 veya 90:00)
+        document.getElementById("counter").textContent = `${limit}:00`;
+
+        // Extra sayaç başlat
+        if (!extraStart) extraStart = Date.now();
+        const extraElapsed = Math.floor((Date.now() - extraStart) / 1000);
+        document.getElementById("extra").textContent = `+${formatTime(extraElapsed)}`;
+      } else {
+        // Normal süre akar
+        document.getElementById("counter").textContent = formatTime(totalSec);
+        document.getElementById("extra").textContent = "";
+      }
+    }
+
+    setInterval(updateCounter, 1000);
+    updateCounter();
+  </script>
+</body>
+</html>
